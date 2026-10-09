@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Applications</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; line-height: 1.5; color: #1c1915; background: #f4f1ea; }
+    body { max-width: 38rem; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: #fff; border: 1px solid #e4ddd2; border-radius: 8px; padding: 1.25rem; }
+    a { color: #1d4e89; font-weight: 600; }
+    .badge { margin: 1rem 0; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.95rem; background: #fff8e1; border: 1px solid #e6d3a1; }
+    .live span.ok { color: #1b6b3a; font-weight: 600; }
+    .live span.bad { color: #8d2a2a; font-weight: 600; }
+    footer { margin-top: 1.5rem; font-size: 0.85rem; color: #5c564c; }
+    code { font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Applications</h1>
+    <p>Confirmed job applications, and roles that were not submitted, with the reason, date, and filters.</p>
+    <p><a href="https://alpha-cheats-treaty-pen.trycloudflare.com/" target="_blank" rel="noopener noreferrer">Open the log</a></p>
+    <p class="badge">Read-only share from a laptop. The log is up only while that laptop is on. The tunnel hostname changes when the tunnel restarts.</p>
+    <p>Checked at publish time: the tunnel answered <code>/</code> with HTTP 200 at 2026-10-09T18:07:09Z UTC.</p>
+    <div class="live">
+      <p>Live check: <span id="live-web">…</span></p>
+      <p><button type="button" id="recheck">Recheck</button></p>
+    </div>
+  </div>
+  <footer>
+    <p>This page: https://psycho789.github.io/apply-tunnel/ · current tunnel: <code>https://alpha-cheats-treaty-pen.trycloudflare.com</code></p>
+  </footer>
+  <script>
+    (function () {
+      const WEB = "https://alpha-cheats-treaty-pen.trycloudflare.com";
+      function setWeb(text, ok) {
+        const el = document.getElementById("live-web");
+        el.textContent = text;
+        el.className = ok === true ? "ok" : ok === false ? "bad" : "";
+      }
+      function run() {
+        const ctrl = new AbortController();
+        const timer = setTimeout(function () { ctrl.abort(); }, 20000);
+        setWeb("Checking…", null);
+        fetch(WEB + "/tunnel-probe.json?t=" + Date.now(), { method: "GET", mode: "cors", cache: "no-store", signal: ctrl.signal })
+          .then(function (response) {
+            clearTimeout(timer);
+            if (!response.ok) { setWeb("HTTP " + response.status, false); return null; }
+            return response.json();
+          })
+          .then(function (body) {
+            if (body && body.ok === true) setWeb("Reachable", true);
+            else if (body) setWeb("Unexpected JSON", false);
+          })
+          .catch(function () { clearTimeout(timer); setWeb("Unreachable (laptop off, or tunnel restarted)", false); });
+      }
+      document.getElementById("recheck").addEventListener("click", run);
+      run();
+    })();
+  </script>
+</body>
+</html>
